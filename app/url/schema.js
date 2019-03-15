@@ -1,42 +1,61 @@
 const mongo = require('../../server/mongodb');
 const mongoose = require('mongoose');
+const mongoosePaginate = require('mongoose-paginate');
 
-module.exports = mongo.model('Url', new mongoose.Schema({
-  url: {
-    type: String,
-    required: true
-  },
+const UrlSchema = new mongoose.Schema({
+  
+    url: {
+        type: String,
+        required: true
+    },
 
-  user: mongoose.Schema.Types.ObjectId,
+    user: mongoose.Schema.Types.ObjectId,
 
-  hash: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  isCustom: {
-    type: Boolean,
-    required: true
-  },
+    hash: {
+        type: String,
+        required: true,
+        unique: true
+    },
 
-  removeToken: {
-    type: String,
-    required: true
-  },
+    shorten: {
+        type: String,
+        required: true,
+        unique: true
+    },
 
-  protocol: String,
-  domain: String,
-  path: String,
+    isCustom: {
+        type: Boolean,
+        required: true
+    },
 
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  removedAt: Date,
+    removeToken: {
+        type: String,
+        required: true
+    },
 
-  active: {
-    type: Boolean,
-    required: true,
-    default: true
-  }
-}));
+    protocol: String,
+
+    domain: String,
+    
+    path: String,
+
+    visits: { type: Number, default: 0 },
+
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+
+    removedAt: Date,
+
+    active: {
+        type: Boolean,
+        required: true,
+        default: true
+    }
+
+});
+
+UrlSchema.plugin(mongoosePaginate);
+
+module.exports = mongo.model('Url', UrlSchema);

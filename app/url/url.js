@@ -1,10 +1,13 @@
 const uuidv4 = require('uuid/v4');
 const { domain } = require('../../environment');
+
+//Change this later
 const SERVER = `${domain.protocol}://${domain.host}`;
 
 const UrlModel = require('./schema');
 const parseUrl = require('url').parse;
 const validUrl = require('valid-url');
+const shortid = require('shortid');
 
 /**
  * Lookup for existant, active shortened URLs by hash.
@@ -13,8 +16,26 @@ const validUrl = require('valid-url');
  * @returns {object}
  */
 async function getUrl(hash) {
-  let source = await UrlModel.findOne({ active: true, hash });
+//   let source = await UrlModel.findOne({ active: true, hash });
+    let source = await UrlModel.findOneAndUpdate({ active: true, hash }, { $inc: { visits: 1 } });
   return source;
+}
+
+getUrls = (req, res) => {
+    
+    var options = {
+        page: parseInt(req.query.page),
+        limit: parseInt(req.query.limit)
+    }
+
+    UrlModel.paginate({}, options)
+        .then((response) => {
+            res.send(response);
+        })
+        .catch((err) => {
+            console.log(err);
+            res.status(500).send(err);
+        });
 }
 
 /**
@@ -26,7 +47,8 @@ async function getUrl(hash) {
  */
 function generateHash(url) {
   // return uuidv5(url, uuidv5.URL);
-  return uuidv4();
+  // return uuidv4();
+  return shortid.generate();
 }
 
 /**
@@ -66,7 +88,9 @@ async function shorten(url, hash) {
     protocol,
     domain,
     path,
+    visits: 0,
     hash,
+    shorten: `${SERVER}/${hash}`,
     isCustom: false,
     removeToken,
     active: true
@@ -93,10 +117,24 @@ function isValid(url) {
   return validUrl.isUri(url);
 }
 
+async function removeUrl(hash, removeToken) {
+    
+    let res = await UrlModel.deleteOne(
+        { hash: hash, removeToken: removeToken }
+    );
+
+    return res;
+
+}
+
+
 module.exports = {
   shorten,
   getUrl,
+  getUrls,
   generateHash,
   generateRemoveToken,
-  isValid
+  removeUrl,
+  isValid,
+
 }

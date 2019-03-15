@@ -1,17 +1,27 @@
 const router = require('express').Router();
-const url = require('./url');
 
+const url = require('./url');
 
 router.get('/:hash', async (req, res, next) => {
 
   const source = await url.getUrl(req.params.hash);
 
   // TODO: Respond accordingly when the hash wasn't found (404 maybe?)
-
-  // TODO: Hide fields that shouldn't be public
-
-  // TODO: Register visit
-
+    if(!source){
+        res.status(404).json({
+            message: 'Url not found, please verify it again'
+        });
+    } 
+    
+    // TODO: Hide fields that shouldn't be public
+    delete source._doc.protocol;
+    delete source._doc.domain;
+    delete source._doc.path;
+    delete source._doc.hash;
+    delete source._doc.isCustom;
+    delete source._doc.removeToken;
+    delete source._doc.__v;
+    delete source._doc.active;
 
   // Behave based on the requested format using the 'Accept' header.
   // If header is not provided or is */* redirect instead.
@@ -28,28 +38,69 @@ router.get('/:hash', async (req, res, next) => {
       res.redirect(source.url);
       break;
   }
+
 });
 
+router.get('/', url.getUrls);
 
 router.post('/', async (req, res, next) => {
 
   // TODO: Validate 'req.body.url' presence
+  if(!req.body.url){
+      res.status(400).json({
+          message: 'Plase send a valid url'
+      });
+  } 
 
   try {
-    let shortUrl = await url.shorten(req.body.url, url.generateHash(req.body.url));
-    res.json(shortUrl);
+    
+    let shortUrl = await url.shorten(
+        req.body.url, 
+        url.generateHash(req.body.url)
+    );
+
+    res.json({ message: 'Url created succesfully', shortUrl: shortUrl});
+
   } catch (e) {
+    
     // TODO: Personalized Error Messages
-    next(e);
+    res.statusMessage = e.message;
+    res.sendStatus(500);
+    
   }
+
+
 });
 
 
 router.delete('/:hash/:removeToken', async (req, res, next) => {
-  // TODO: Remove shortened URL if the remove token and the hash match
-  let notImplemented = new Error('Not Implemented');
-  notImplemented.status = 501;
-  next(notImplemented);
+    
+    // TODO: Remove shortened URL if the remove token and the hash match
+    try{
+        
+        let result = await url.removeUrl(req.params.hash, req.params.removeToken);
+
+        if(result.n === 1){
+
+            res.status(200).json({
+                message: 'Url deleted succesfully'
+            });
+
+        } else {
+
+            res.status(400).json({
+                message: 'Url not existing in this place'
+            });
+            
+        }
+
+    } catch(e) {
+        
+        console.warn(e);
+        res.status(500).json({ message: 'An internal server error ocurred' });
+
+    }
+
 });
 
 module.exports = router;
