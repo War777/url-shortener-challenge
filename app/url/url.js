@@ -1,7 +1,6 @@
 const uuidv4 = require('uuid/v4');
 const { domain } = require('../../environment');
 
-//Change this later
 const SERVER = `${domain.protocol}://${domain.host}`;
 
 const UrlModel = require('./schema');
@@ -21,6 +20,12 @@ async function getUrl(hash) {
   return source;
 }
 
+/**
+* Return existing documents (URLs) inside the current page
+* and sends them back in the response
+* @param {object} req
+* @param {object} res
+*/
 getUrls = (req, res) => {
     
     var options = {
@@ -90,14 +95,19 @@ async function shorten(url, hash) {
     path,
     visits: 0,
     hash,
-    shorten: `${SERVER}/${hash}`,
+    shorten: `${SERVER}/${hash}`,  // Oscar added this field to store the shorten url
     isCustom: false,
     removeToken,
     active: true
   });
 
-  const saved = await shortUrl.save();
   // TODO: Handle save errors
+  try{
+    const saved = await shortUrl.save();
+  } catch(e){
+      throw new Error('Error saving the url');
+  }
+  
 
   return {
     url,

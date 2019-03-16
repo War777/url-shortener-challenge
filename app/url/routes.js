@@ -14,14 +14,11 @@ router.get('/:hash', async (req, res, next) => {
     } 
     
     // TODO: Hide fields that shouldn't be public
-    delete source._doc.protocol;
+    
+    delete source._doc.protocol; // These fields where stored to metrics purpose
     delete source._doc.domain;
     delete source._doc.path;
     delete source._doc.hash;
-    delete source._doc.isCustom;
-    delete source._doc.removeToken;
-    delete source._doc.__v;
-    delete source._doc.active;
 
   // Behave based on the requested format using the 'Accept' header.
   // If header is not provided or is */* redirect instead.
@@ -96,8 +93,8 @@ router.delete('/:hash/:removeToken', async (req, res, next) => {
 
     } catch(e) {
         
-        console.warn(e);
-        res.status(500).json({ message: 'An internal server error ocurred' });
+        res.statusMessage = e.message;
+        res.sendStatus(500);
 
     }
 

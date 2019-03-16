@@ -141,7 +141,7 @@ class UrlsTable extends Component {
     */
     render(){
 
-        // Urls in table row format
+        // Urls in table row format, puts the DeleteUrl component inside the row
         var urlsHtml = [];
 
         this.state.urls.forEach((url, i) => {
@@ -155,7 +155,6 @@ class UrlsTable extends Component {
                         <a href={ url.shorten } target="_blank"> { url.shorten } </a>
                     </td>
 
-                    // Puts the delete button inside the table row
                     <td className="text-nowrap text-center">
                         <DeleteUrl onDelete={this.fetchDocs} hash={url.hash} removeToken={url.removeToken} />
                     </td>
@@ -228,7 +227,7 @@ class UrlsTable extends Component {
 
                 <div className="table-responsive">
 
-                    <table className="table  table-sm table-bordered" >
+                    <table className="table table-sm table-bordered table-striped table-hover" >
 
                         <thead>
                             <tr>
