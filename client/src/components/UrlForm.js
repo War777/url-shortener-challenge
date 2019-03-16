@@ -17,6 +17,9 @@ class UrlForm extends Component{
 
     }
 
+    /**
+    * Copies the actual shortened url to clipboard
+    */
     copyToClipboard(){
 
         let inputUrl = document.getElementById('inputUrl');
@@ -26,6 +29,11 @@ class UrlForm extends Component{
         alert('Copied to clioboard!');
     }
 
+    /**
+    * Sends the url to endpoint
+    * After a succesful response changes the original url
+    * to the shorten inside the form input
+    */
     handleSubmit(e){
 
         e.preventDefault();
@@ -72,6 +80,10 @@ class UrlForm extends Component{
 
     }
 
+    /*
+    * Change the state with the actual input value
+    * to send it to the endpoint later
+    */
     handleChange(e){
 
         this.setState({
@@ -80,15 +92,12 @@ class UrlForm extends Component{
         });
     }
 
+    /*
+    * Renders the form.
+    * Renders a button to short or a button to copy to clipboard
+    * according to the state if it has been shortened
+    */
     render(){
-
-        // var button = this.state.isShortened
-        //     ?   <button className="btn btn-outline-danger" type="button" id="shorten-button" onClick={this.copyToClipboard}>
-        //             Copy
-        //         </button>
-        //     :   <button className="btn btn-outline-primary" type="submit" id="shorten-button">
-        //             Shorten
-        //         </button> ;
 
         return(
 

@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
+
 import UrlForm from './UrlForm';
+import DeleteUrl from './DeleteUrl';
 
 class UrlsTable extends Component {
 
@@ -8,21 +10,30 @@ class UrlsTable extends Component {
         super();
 
         this.state = {
-            page: 1,        // Iniciamos de la pagina 1
-            limit: 10,       // Definimos 5 documentos por pagina
-            total: 0,       // Total de documentos, se ajusta despues del primer fetch
-            pages: 0,       // Total de pagina, se ajusta despues del primer fetch
-            urls: [],   // Documentos (Productos), se ajusta despues del primer fetch
+            page: 1,        // Starts in the page 1, it changes with every changePage() call.
+            limit: 10,      // Docs per page
+            total: 0,       // Total docs in the urls collection, it sets with each fetchDocs() call
+            pages: 0,       // Available pages in the urls collection, it sets with each fetchDocs() call
+            urls: [],       // Current urls to show inside the table
         }
 
-        // Configuramos los eventos
-        this.handleLiClick = this.handleLiClick.bind(this);
-        this.fetchDocs = this.fetchDocs.bind(this);
-        this.getUrl = this.getUrl.bind(this);
-        this.handleAddUrl = this.handleAddUrl.bind(this);
         this.changePage = this.changePage.bind(this);
+
+        this.fetchDocs = this.fetchDocs.bind(this);
+
+        this.getUrl = this.getUrl.bind(this);
+
+        this.handleClick = this.handleClick.bind(this);
+
+        this.handleAddUrl = this.handleAddUrl.bind(this);
+
     }
 
+    /**
+    * Changes the previous/next page
+    * Evaluates the anchor that calls this function
+    * @params e
+    */
     changePage(e){
 
         e.preventDefault();
@@ -62,19 +73,28 @@ class UrlsTable extends Component {
 
     }
 
-    /* Genera una URL valida para la API, incluyendo la pagina y el limite de documentos a partir del estado */
+    /**
+    * Generates the url that is going to be fetched
+    * according the current page and documents limit per page
+    */
     getUrl(){
         var url = 'http://localhost:3000/?page=' + this.state.page + '&limit=' + this.state.limit;
         return url;
     }
 
-    /* Agregamos los documentos, pagina y el total de paginas al estado despues de montar el componente */
+    /*
+    * Fetches the docs to be rendered inside the table
+    * after the component is mounted
+    */
     componentDidMount(){
         this.fetchDocs();
     }
 
-    /* Evento que actualiza los documento al hacer click en cada elemnto de la pgainacion */
-    handleLiClick(e){
+    /*
+    * Change the current page by clicking nav buttons
+    * Renders the docs in the page inside the table
+    */
+    handleClick(e){
         this.setState(
             {
                 page: parseInt(e.target.getAttribute('value'))
@@ -85,12 +105,19 @@ class UrlsTable extends Component {
         );
     }
 
-    /* Funcion para agregar un producto */
+    /*
+    * Fires fetchDocs() event
+    * It's called inside the UrlForm component after each url creation
+    */
     handleAddUrl(){
         this.fetchDocs();
     }
 
-    /* Funcion que actualiza los documentos, pagina y total de paginas al estado */
+    /*
+    * Fetches url inside the urls collection
+    * Set urls to render inside the table with the documents
+    * inside the current page
+    */
     fetchDocs(){
 
         var url = this.getUrl();
@@ -107,45 +134,64 @@ class UrlsTable extends Component {
         );
     }
 
-    /* Presentamos los elementos */
+    /*
+    * Renders a table with the urls
+    * with nav pagination separating each page
+    * with the number of urls per page
+    */
     render(){
 
-        // Construimos la tabla d eproductos
+        // Urls in table row format
         var urlsHtml = [];
 
         this.state.urls.forEach((url, i) => {
+
             urlsHtml.push(
-                <tr>
+
+                <tr id={url._id}>
                     <td className="text-nowrap text-center">{ url.createdAt }</td>
                     <td className="text-nowrap text-center">{ url.visits }</td>
                     <td className="text-nowrap">
                         <a href={ url.shorten } target="_blank"> { url.shorten } </a>
                     </td>
+
+                    // Puts the delete button inside the table row
+                    <td className="text-nowrap text-center">
+                        <DeleteUrl onDelete={this.fetchDocs} hash={url.hash} removeToken={url.removeToken} />
+                    </td>
+
                 </tr>
+
             );
         });
 
+        // Fills the page with empty rows in case the number of url is less than the urls per page
         if(this.state.limit - this.state.urls.length > 0){
 
             for(let i = 0; i < this.state.limit - this.state.urls.length; i++){
+
                 urlsHtml.push(
-                    <tr>
+
+                    <tr id={i}>
+                        <td className="text-nowrap text-center"> - </td>
                         <td className="text-nowrap text-center"> - </td>
                         <td className="text-nowrap text-center"> - </td>
                         <td className="text-nowrap text-center"> - </td>
                     </tr>
+
                 );
+
             }
 
         }
 
-        // Contruimos la navegacion
+        // It builds the nav pagination
         var navPages = [];
 
         if(this.state.pages > 0){
 
             for(var i = 0; i < this.state.pages; i++){
-                navPages[i] = <li onClick={this.handleLiClick} className="page-item"> <a className="page-link" value={i+1}> {i+1} </a>  </li>;
+                navPages[i] = <li onClick={this.handleClick} className="page-item"> <a className="page-link" value={i+1}> {i+1} </a>  </li>;
             }
 
         }
@@ -169,7 +215,7 @@ class UrlsTable extends Component {
 
             </ul>;
 
-        // Contruimos el renderizado final de la tabla con navegacion
+        // It renders the table nesting the previus built html elements
         return(
 
             <div>
@@ -181,16 +227,21 @@ class UrlsTable extends Component {
                 <br/>
 
                 <div className="table-responsive">
+
                     <table className="table  table-sm table-bordered" >
+
                         <thead>
                             <tr>
                                 <td className="text-center font-weight-bold">Date</td>
                                 <td className="text-center font-weight-bold">Visits</td>
                                 <td className="text-center font-weight-bold">Short Url</td>
+                                <td className="text-center font-weight-bold">Delete</td>
                             </tr>
                         </thead>
 
-                        { urlsHtml }
+                        <tbody>
+                            { urlsHtml }
+                        </tbody>
 
                     </table>
 
